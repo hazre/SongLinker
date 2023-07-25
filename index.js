@@ -1,80 +1,104 @@
-const dotenv = require("dotenv");
-const { Client, GatewayIntentBits, ActivityType } = require("discord.js");
-const Odesli = require('odesli.js');
-const { sendLink } = require("./utils/reply");
-const { SlashCreator, GatewayServer } = require('slash-create');
-const SimplDB = require('simpl.db');
-const path = require('path');
+import { config } from 'dotenv';
+import { Client, GatewayIntentBits, ActivityType, GatewayDispatchEvents } from 'discord.js';
+import Odesli from 'odesli.js';
+import { sendLink } from './utils/reply.js';
+import { SlashCreator, GatewayServer } from 'slash-create';
+import SimplDB from 'simpl.db';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import commands from './commands/index.js';
 
-dotenv.config();
+config();
 
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-    ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 const odesli = new Odesli();
 const creator = new SlashCreator({
-    applicationID: process.env.DISCORD_ID,
-    publicKey: process.env.DISCORD_PUBKEY,
-    token: process.env.DISCORD_TOKEN,
+  applicationID: process.env.DISCORD_ID ?? '',
+  publicKey: process.env.DISCORD_PUBKEY ?? '',
+  token: process.env.DISCORD_TOKEN ?? '',
 });
 
 const dbpath = path.resolve('./db/');
-const db = new SimplDB({
-    dataFile: path.join(dbpath, 'db.json'),
-    collectionsFolder: path.join(dbpath, 'collections'),
+
+// Check if the 'db' directory exists, if not, create it.
+if (!fs.existsSync(dbpath)) {
+  fs.mkdirSync(dbpath);
+}
+
+const db = SimplDB({
+  dataFile: path.join(dbpath, 'db.json'),
+  collectionsFolder: path.join(dbpath, 'collections'),
 });
 
-client.optOutDB = db.createCollection('optedout');
+const optOutDB = db.createCollection('optedout');
 
-client.on("ready", () => {
-    client.user.setPresence({
-        activities: [{ name: `for music links`, type: ActivityType.Watching }],
-        status: 'online',
-    });
+client.on('ready', () => {
+  client.user?.setPresence({
+    activities: [{ name: `for music links`, type: ActivityType.Watching }],
+    status: 'online',
+  });
 
-    console.log(`Logged in as ${client.user.tag}!`);
-})
+  console.log(`Logged in as ${client.user?.tag}!`);
+});
 
-client.on("messageCreate", async (message) => {
-    if (client.optOutDB.fetch(u => u.user === message.author.id)) {
-        return;
-    }
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (optOutDB.fetch((u) => u.user === message.author.id)) {
+    return;
+  }
 
-    const urls = message.content.match(/(https?:\/\/(music\.apple\.com|open\.spotify\.com|soundcloud\.com)\/[^\s]+)/g);
+  const songUrlRegexList = [/https?:\/\/.*?spotify\.com\/\S*/g, /https?:\/\/music\.amazon\.com\/\S*/g, /https?:\/\/.*?music\.apple\.com\/\S*/g, /https?:\/\/.*?tidal\.com\/\S*/g, /https?:\/\/.*?music\.youtube\.com\/\S*/g, /https?:\/\/.*?deezer\.com\/\S*/g];
 
-    if (urls) {
-        message.channel.sendTyping();
-        urls.forEach(async url => {
-            try {
-                let song = await odesli.fetch(url);
-                if (!song) return;
+  let songUrls = [];
+  songUrlRegexList.forEach((regex) => {
+    const matched = message.content.match(regex);
+    if (matched) songUrls = songUrls.concat(matched);
+  });
 
-                sendLink(message, song);
-            } catch (error) {
-                console.error(error);
-            }
+  if (songUrls.length) {
+    message.channel.sendTyping();
+    songUrls.forEach(async (songUrl) => {
+      try {
+        let song = await odesli.fetch(songUrl);
+        if (!song) return;
 
+        let songwhip = await fetch('https://songwhip.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: songUrl,
+          }),
         });
-    }
 
+        let artistImg = undefined;
+
+        if (songwhip.ok) {
+          artistImg = await songwhip.json();
+        }
+
+        sendLink(message, song, artistImg.artists[0]);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }
 });
 
 creator
-    .withServer(
-        new GatewayServer(
-            (handler) => client.ws.on('INTERACTION_CREATE', handler)
-        )
-    )
-    .registerCommandsIn(path.join(__dirname, 'commands'))
-    .syncCommands();
+  .withServer(new GatewayServer((handler) => client.ws.on(GatewayDispatchEvents.InteractionCreate, handler)))
+  .registerCommands([commands.optout, commands.songlink])
+  // .registerCommandsIn(path.join(path.dirname(fileURLToPath(import.meta.url)), 'commands')) // esm is broken
+  .syncCommands();
 
 client.login(process.env.DISCORD_TOKEN);
-module.exports = {
-    client,
-    creator,
-    odesli
+export default {
+  client,
+  optOutDB,
+  creator,
+  odesli,
 };
