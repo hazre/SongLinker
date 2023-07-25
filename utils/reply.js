@@ -13,7 +13,7 @@ const supportedPlatfrom = {
     emoji: '1133229418802860103',
   },
   youtubeMusic: {
-    name: 'Youtube Music',
+    name: 'YT Music',
     emoji: '1133230856429899817',
   },
   youtube: {
@@ -25,7 +25,7 @@ const supportedPlatfrom = {
     emoji: '1133229422816788560',
   },
   appleMusic: {
-    name: 'Apple Music',
+    name: 'Apple',
     emoji: '1133229421432680509',
   },
   pandora: {
@@ -37,11 +37,11 @@ const supportedPlatfrom = {
     emoji: '1133499063812227163',
   },
   amazonMusic: {
-    name: 'Amazon Music',
+    name: 'Amazon',
     emoji: '1133499061291450428',
   },
   yandex: {
-    name: 'Yandex Music',
+    name: 'Yandex',
     emoji: '1133499062629441677',
   },
 };
@@ -80,7 +80,7 @@ export async function sendLink(message, link, artist) {
 
   // Group the buttons into chunks of 5
   const buttonGroups = [];
-  while (buttons.length) buttonGroups.push(buttons.splice(0, 3));
+  while (buttons.length) buttonGroups.push(buttons.splice(0, 4));
 
   // For each group, create an ActionRow and add it to the message components
   const components = buttonGroups.map((group) => {
