@@ -1,0 +1,14 @@
+version: "3"
+services:
+  songlinker-bot:
+    restart: unless-stopped
+    container_name: songlinker-bot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # environment:
+    #   - DISCORD_ID=xxxx
+    #   - DISCORD_PUBKEY=xxxx
+    #   - DISCORD_TOKEN=xxxx
+    env_file:
+      - .env
