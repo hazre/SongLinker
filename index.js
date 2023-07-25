@@ -50,7 +50,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  const songUrlRegexList = [/https?:\/\/.*?spotify\.com\/\S*/g, /https?:\/\/music\.amazon\.com\/\S*/g, /https?:\/\/.*?music\.apple\.com\/\S*/g, /https?:\/\/.*?tidal\.com\/\S*/g, /https?:\/\/.*?music\.youtube\.com\/\S*/g, /https?:\/\/.*?deezer\.com\/\S*/g];
+  const songUrlRegexList = [/https?:\/\/.*?spotify\.com\/\S*/g, /https?:\/\/music\.amazon\.com\/\S*/g, /https?:\/\/.*?music\.apple\.com\/\S*/g, /https?:\/\/.*?tidal\.com\/\S*/g, /https?:\/\/.*?music\.youtube\.com\/\S*/g, /https?:\/\/.*?deezer\.com\/\S*/g, /https?:\/\/music\.yandex\.ru\/\S*/g, /https?:\/\/.*?pandora\.com\/\S*/g];
 
   let songUrls = [];
   songUrlRegexList.forEach((regex) => {
@@ -81,7 +81,7 @@ client.on('messageCreate', async (message) => {
           artistImg = await songwhip.json();
         }
 
-        sendLink(message, song, artistImg.artists[0]);
+        sendLink(message, song, artistImg);
       } catch (error) {
         console.error(error);
       }
