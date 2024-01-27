@@ -91,7 +91,7 @@ client.on('messageCreate', async (message) => {
 
 creator
   .withServer(new GatewayServer((handler) => client.ws.on(GatewayDispatchEvents.InteractionCreate, handler)))
-  .registerCommands([commands.optout, commands.songlink])
+  .registerCommands([commands.optout, commands.songlink, commands.echo])
   // .registerCommandsIn(path.join(path.dirname(fileURLToPath(import.meta.url)), 'commands')) // esm is broken
   .syncCommands();
 
