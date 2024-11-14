@@ -63,6 +63,11 @@ const linkType = {
  * @param {*} artist - Optional artist data
  */
 export async function sendLink(message, link, artist) {
+  // Ignore YouTube playlists
+  if (link.entityUniqueId?.startsWith("YOUTUBE_PLAYLIST::")) {
+    return;
+  }
+
   let artist_img = undefined;
 
   if (artist) {
