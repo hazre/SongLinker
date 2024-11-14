@@ -64,7 +64,13 @@ const linkType = {
  */
 export async function sendLink(message, link, artist) {
   // Ignore YouTube playlists
-  if (link.entityUniqueId?.startsWith("YOUTUBE_PLAYLIST::")) {
+  const hasNonYouTubeEntities = Object.keys(link.entitiesByUniqueId).some(
+    (id) => !id.startsWith("YOUTUBE_PLAYLIST::")
+  );
+  if (
+    link.entityUniqueId?.startsWith("YOUTUBE_PLAYLIST::") &&
+    !hasNonYouTubeEntities
+  ) {
     return;
   }
 
