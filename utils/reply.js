@@ -1,56 +1,67 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import Vibrant from 'node-vibrant';
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+} from "discord.js";
+import Vibrant from "node-vibrant";
 
 // const removeButton = new ButtonBuilder().setCustomId('remove').setLabel('Delete').setStyle(ButtonStyle.Danger);
 // const buttonRow = new ActionRowBuilder().addComponents(removeButton);
 const supportedPlatfrom = {
   soundcloud: {
-    name: 'Soundcloud',
-    emoji: '1133229419771732130',
+    name: "Soundcloud",
+    emoji: "1133229419771732130",
   },
   tidal: {
-    name: 'Tidal',
-    emoji: '1133229418802860103',
+    name: "Tidal",
+    emoji: "1133229418802860103",
   },
   youtubeMusic: {
-    name: 'YT Music',
-    emoji: '1133230856429899817',
+    name: "YT Music",
+    emoji: "1133230856429899817",
   },
   youtube: {
-    name: 'Youtube',
-    emoji: '1133499065796149350',
+    name: "Youtube",
+    emoji: "1133499065796149350",
   },
   spotify: {
-    name: 'Spotify',
-    emoji: '1133229422816788560',
+    name: "Spotify",
+    emoji: "1133229422816788560",
   },
   appleMusic: {
-    name: 'Apple',
-    emoji: '1133229421432680509',
+    name: "Apple",
+    emoji: "1133229421432680509",
   },
   pandora: {
-    name: 'Pandora',
-    emoji: '1133499059483713607',
+    name: "Pandora",
+    emoji: "1133499059483713607",
   },
   deezer: {
-    name: 'Deezer',
-    emoji: '1133499063812227163',
+    name: "Deezer",
+    emoji: "1133499063812227163",
   },
   amazonMusic: {
-    name: 'Amazon',
-    emoji: '1133499061291450428',
+    name: "Amazon",
+    emoji: "1133499061291450428",
   },
   yandex: {
-    name: 'Yandex',
-    emoji: '1133499062629441677',
+    name: "Yandex",
+    emoji: "1133499062629441677",
   },
 };
 
 const linkType = {
-  song: 'Track',
-  album: 'Album',
+  song: "Track",
+  album: "Album",
 };
 
+/**
+ * Send a formatted link message to Discord
+ * @param {import('discord.js').Message} message - The Discord message
+ * @param {import('./types.js').OdesliResponse} link - The formatted link data
+ * @param {*} artist - Optional artist data
+ */
 export async function sendLink(message, link, artist) {
   let artist_img = undefined;
 
@@ -60,22 +71,41 @@ export async function sendLink(message, link, artist) {
 
   const embedcolor = await Vibrant.from(link.thumbnail).getPalette();
   const embedmessage = new EmbedBuilder()
-    .setDescription(`**${linkType[link.type]}:** ${link.title}\n **Artist:** ${link.artist.join(', ')}`)
-    .setAuthor({ name: `${link.title} - ${link.artist.join(', ')}`, url: link.pageUrl, iconURL: artist_img })
+    .setDescription(
+      `**${linkType[link.type]}:** ${
+        link.title
+      }\n **Artist:** ${link.artist.join(", ")}`
+    )
+    .setAuthor({
+      name: `${link.title} - ${link.artist.join(", ")}`,
+      url: link.pageUrl,
+      iconURL: artist_img,
+    })
     .setImage(link.thumbnail)
-    .setFooter({ text: `Shared by ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+    .setFooter({
+      text: `Shared by ${message.author.username}`,
+      iconURL: message.author.displayAvatarURL(),
+    })
     // @ts-ignore
-    .setColor(embedcolor.Vibrant?.hex ?? 'DarkButNotBlack');
+    .setColor(embedcolor.Vibrant?.hex ?? "DarkButNotBlack");
 
   let buttons = [];
   Object.values(link.linksByPlatform).forEach((platform, i) => {
     platform.name = Object.keys(link.linksByPlatform)[i];
     if (!Object.keys(supportedPlatfrom).includes(platform.name)) return;
-    const btn = new ButtonBuilder().setURL(platform.url).setLabel(supportedPlatfrom[platform.name].name).setStyle(ButtonStyle.Link).setEmoji({ id: supportedPlatfrom[platform.name].emoji });
+    const btn = new ButtonBuilder()
+      .setURL(platform.url)
+      .setLabel(supportedPlatfrom[platform.name].name)
+      .setStyle(ButtonStyle.Link)
+      .setEmoji({ id: supportedPlatfrom[platform.name].emoji });
     buttons.push(btn);
   });
 
-  const btn = new ButtonBuilder().setURL(link.pageUrl).setLabel('Others').setStyle(ButtonStyle.Link).setEmoji({ name: '🔗' });
+  const btn = new ButtonBuilder()
+    .setURL(link.pageUrl)
+    .setLabel("Others")
+    .setStyle(ButtonStyle.Link)
+    .setEmoji({ name: "🔗" });
   buttons.push(btn);
 
   // Group the buttons into chunks of 5

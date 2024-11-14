@@ -1,15 +1,17 @@
-import { SlashCommand, CommandOptionType } from 'slash-create';
-import bot from '../index.js';
+import { SlashCommand, CommandOptionType } from "slash-create";
+import bot from "../index.js";
+
 export default class extends SlashCommand {
   constructor(creator) {
     super(creator, {
-      name: 'songlink',
-      description: 'Manually get a song.link.',
+      name: "songlink",
+      description: "Manually get a song.link.",
       options: [
         {
-          name: 'url',
+          name: "url",
           type: CommandOptionType.STRING,
-          description: 'URL to a song/album (On Spotify, Apple Music, Youtube, SoundCloud, etc.)',
+          description:
+            "URL to a song/album (On Spotify, Apple Music, Youtube, SoundCloud, etc.)",
           required: true,
         },
       ],
@@ -20,6 +22,7 @@ export default class extends SlashCommand {
     await ctx.defer();
 
     try {
+      /** @type {import('../utils/types.js').OdesliResponse} */
       let song = await bot.odesli.fetch(ctx.options.url);
 
       ctx.sendFollowUp(song.pageUrl);
