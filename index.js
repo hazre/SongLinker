@@ -65,23 +65,7 @@ client.on('messageCreate', async (message) => {
         let song = await odesli.fetch(songUrl);
         if (!song) return;
 
-        let songwhip = await fetch('https://songwhip.com', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: songUrl,
-          }),
-        });
-
-        let artistImg = undefined;
-
-        if (songwhip.ok) {
-          artistImg = await songwhip.json();
-        }
-
-        sendLink(message, song, artistImg);
+        sendLink(message, song, undefined);
       } catch (error) {
         console.error(error);
       }
