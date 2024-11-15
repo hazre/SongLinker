@@ -14,16 +14,16 @@
   "author": "artificialbutter",
   "license": "AGPL-3.0",
   "dependencies": {
-    "discord.js": "^14.13.0",
-    "dotenv": "^16.3.1",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
     "node-vibrant": "^3.2.1-alpha.1",
     "odesli.js": "^1.0.4",
-    "sequelize": "^6.35.1",
-    "slash-create": "^5.13.0",
-    "sqlite3": "^5.1.6"
+    "sequelize": "^6.37.5",
+    "slash-create": "^5.14.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "tsx": "^3.12.7"
+    "tsx": "^3.14.0"
   },
-  "packageManager": "pnpm@9.13.1"
+  "packageManager": "pnpm@9.13.2"
 }
