@@ -6,8 +6,6 @@ import {
 } from "discord.js";
 import Vibrant from "node-vibrant";
 
-// const removeButton = new ButtonBuilder().setCustomId('remove').setLabel('Delete').setStyle(ButtonStyle.Danger);
-// const buttonRow = new ActionRowBuilder().addComponents(removeButton);
 const supportedPlatfrom = {
   soundcloud: {
     name: "Soundcloud",
@@ -56,6 +54,63 @@ const linkType = {
   album: "Album",
 };
 
+const platformThumbnailPriority = [
+  "SPOTIFY_ALBUM::",
+  "SPOTIFY_TRACK::",
+  "DEEZER_ALBUM::",
+  "DEEZER_TRACK::",
+  "TIDAL_ALBUM::",
+  "TIDAL_TRACK::",
+];
+
+/**
+ * Check if a URL is accessible and returns an image
+ * @param {string} url - The URL to validate
+ * @returns {Promise<boolean>}
+ */
+async function isValidImageUrl(url) {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    if (!response.ok) return false;
+
+    const contentType = response.headers.get("content-type");
+    return contentType && contentType.startsWith("image/");
+  } catch (error) {
+    console.error("Error validating image URL:", error);
+    return false;
+  }
+}
+
+/**
+ * Find the best available thumbnail URL from entities
+ * @param {import('./types.js').OdesliResponse} link
+ * @returns {Promise<string|null>}
+ */
+async function findBestThumbnail(link) {
+  if (link.thumbnail && (await isValidImageUrl(link.thumbnail))) {
+    return link.thumbnail;
+  }
+
+  const entities = Object.entries(link.entitiesByUniqueId);
+
+  for (const prefix of platformThumbnailPriority) {
+    const entity = entities.find(([id]) => id.startsWith(prefix));
+    if (entity && entity[1].thumbnailUrl) {
+      if (await isValidImageUrl(entity[1].thumbnailUrl)) {
+        return entity[1].thumbnailUrl;
+      }
+    }
+  }
+
+  for (const [, entity] of entities) {
+    if (entity.thumbnailUrl && (await isValidImageUrl(entity.thumbnailUrl))) {
+      return entity.thumbnailUrl;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Send a formatted link message to Discord
  * @param {import('discord.js').Message} message - The Discord message
@@ -80,7 +135,20 @@ export async function sendLink(message, link, artist) {
     artist_img = artist.artists[0].image;
   }
 
-  const embedcolor = await Vibrant.from(link.thumbnail).getPalette();
+  const thumbnailUrl = await findBestThumbnail(link);
+
+  let embedColorHex = "DarkButNotBlack";
+  if (thumbnailUrl) {
+    try {
+      const palette = await Vibrant.from(thumbnailUrl).getPalette();
+      if (palette && palette.Vibrant) {
+        embedColorHex = palette.Vibrant.hex;
+      }
+    } catch (error) {
+      console.error("Failed to get color palette:", error);
+    }
+  }
+
   const embedmessage = new EmbedBuilder()
     .setDescription(
       `**${linkType[link.type]}:** ${
@@ -92,13 +160,12 @@ export async function sendLink(message, link, artist) {
       url: link.pageUrl,
       iconURL: artist_img,
     })
-    .setImage(link.thumbnail)
+    .setImage(thumbnailUrl)
     .setFooter({
       text: `Shared by ${message.author.username}`,
       iconURL: message.author.displayAvatarURL(),
     })
-    // @ts-ignore
-    .setColor(embedcolor.Vibrant?.hex ?? "DarkButNotBlack");
+    .setColor(embedColorHex);
 
   let buttons = [];
   Object.values(link.linksByPlatform).forEach((platform, i) => {
