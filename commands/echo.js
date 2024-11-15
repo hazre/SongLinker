@@ -1,20 +1,23 @@
-import { SlashCommand, CommandOptionType } from 'slash-create';
+import { SlashCommand, CommandOptionType } from "slash-create";
 export default class extends SlashCommand {
   constructor(creator) {
     super(creator, {
-      name: 'echo',
-      description: 'Echos whatever you send it (for testing)',
+      name: "echo",
+      description: "Echos whatever you send it (for testing)",
       options: [
         {
-          name: 'input',
+          name: "input",
           type: CommandOptionType.STRING,
-          description: 'Any content',
+          description: "Any content",
           required: true,
         },
       ],
     });
   }
 
+  /**
+   * @param {import('slash-create').CommandContext} ctx
+   */
   async run(ctx) {
     await ctx.defer();
 

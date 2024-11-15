@@ -11,13 +11,16 @@ export default class extends SlashCommand {
           name: "url",
           type: CommandOptionType.STRING,
           description:
-            "URL to a song/album (On Spotify, Apple Music, Youtube, SoundCloud, etc.)",
+            "URL to a song/album (On Spotify, Apple Music, Youtube, etc.)",
           required: true,
         },
       ],
     });
   }
 
+  /**
+   * @param {import('slash-create').CommandContext} ctx
+   */
   async run(ctx) {
     await ctx.defer();
 
@@ -27,6 +30,7 @@ export default class extends SlashCommand {
 
       ctx.sendFollowUp(song.pageUrl);
     } catch (error) {
+      console.error(error);
       ctx.sendFollowUp("Couldn't find a song link for your URL.");
     }
   }

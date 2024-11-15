@@ -1,5 +1,5 @@
 import { SlashCommand } from "slash-create";
-import { OptedOut } from "../index.js";
+import bot from "../index.js";
 
 export default class extends SlashCommand {
   constructor(creator) {
@@ -9,10 +9,13 @@ export default class extends SlashCommand {
     });
   }
 
+  /**
+   * @param {import('slash-create').CommandContext} ctx
+   */
   async run(ctx) {
     await ctx.defer({ ephemeral: true });
 
-    let [user, created] = await OptedOut.findOrCreate({
+    let [user, created] = await bot.OptedOut.findOrCreate({
       where: { UserID: ctx.user.id },
     });
     if (created) {
@@ -20,7 +23,7 @@ export default class extends SlashCommand {
         "You have opted out of automatic song links on your messages globally.\nTo opt back in, just run this command again."
       );
     } else {
-      await OptedOut.destroy({ where: { UserID: user.UserID } });
+      await bot.OptedOut.destroy({ where: { UserID: user.UserID } });
       ctx.sendFollowUp(
         "You have opted back into automatic song links on your messages globally.\nTo opt back out, just run this command again."
       );
