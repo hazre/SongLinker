@@ -76,6 +76,7 @@ export async function sendLink(message, link) {
   Object.values(link.linksByPlatform).forEach((platform, i) => {
     platform.name = Object.keys(link.linksByPlatform)[i];
     if (!Object.keys(supportedPlatfrom).includes(platform.name)) return;
+    if (link.linksByPlatform.youtube) return;
     const btn = new ButtonBuilder()
       .setURL(platform.url)
       .setLabel(supportedPlatfrom[platform.name].name)
