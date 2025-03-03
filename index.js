@@ -74,7 +74,6 @@ client.on("messageCreate", async (message) => {
     message.channel.sendTyping();
     for (const url of urls) {
       try {
-        /** @type {import('./utils/types.js').OdesliResponse} */
         let song = await odesli.fetch(url);
         if (!song) return;
 

@@ -2,9 +2,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
 } from "discord.js";
-import Vibrant from "node-vibrant";
 
 const supportedPlatfrom = {
   soundcloud: {
@@ -49,75 +47,13 @@ const supportedPlatfrom = {
   },
 };
 
-const linkType = {
-  song: "Track",
-  album: "Album",
-};
-
-const platformThumbnailPriority = [
-  "SPOTIFY_ALBUM::",
-  "SPOTIFY_TRACK::",
-  "DEEZER_ALBUM::",
-  "DEEZER_TRACK::",
-  "TIDAL_ALBUM::",
-  "TIDAL_TRACK::",
-];
-
-/**
- * Check if a URL is accessible and returns an image
- * @param {string} url - The URL to validate
- * @returns {Promise<boolean>}
- */
-async function isValidImageUrl(url) {
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    if (!response.ok) return false;
-
-    const contentType = response.headers.get("content-type");
-    return contentType && contentType.startsWith("image/");
-  } catch (error) {
-    console.error("Error validating image URL:", error);
-    return false;
-  }
-}
-
-/**
- * Find the best available thumbnail URL from entities
- * @param {import('./types.js').OdesliResponse} link
- * @returns {Promise<string|null>}
- */
-async function findBestThumbnail(link) {
-  if (link.thumbnail && (await isValidImageUrl(link.thumbnail))) {
-    return link.thumbnail;
-  }
-
-  const entities = Object.entries(link.entitiesByUniqueId);
-
-  for (const prefix of platformThumbnailPriority) {
-    const entity = entities.find(([id]) => id.startsWith(prefix));
-    if (entity && entity[1].thumbnailUrl) {
-      if (await isValidImageUrl(entity[1].thumbnailUrl)) {
-        return entity[1].thumbnailUrl;
-      }
-    }
-  }
-
-  for (const [, entity] of entities) {
-    if (entity.thumbnailUrl && (await isValidImageUrl(entity.thumbnailUrl))) {
-      return entity.thumbnailUrl;
-    }
-  }
-
-  return null;
-}
 
 /**
  * Send a formatted link message to Discord
  * @param {import('discord.js').Message} message - The Discord message
- * @param {import('./types.js').OdesliResponse} link - The formatted link data
- * @param {*} artist - Optional artist data
+ * @param {import('odesli.js').Page.Response} link - The formatted link data
  */
-export async function sendLink(message, link, artist) {
+export async function sendLink(message, link) {
   // Ignore YouTube playlists
   const hasNonYouTubeEntities = Object.keys(link.entitiesByUniqueId).some(
     (id) => !id.startsWith("YOUTUBE_PLAYLIST::")
@@ -129,43 +65,12 @@ export async function sendLink(message, link, artist) {
     return;
   }
 
-  let artist_img = undefined;
+  const song_title = link.entitiesByUniqueId[link.entityUniqueId].title;
+  const song_artist = link.entitiesByUniqueId[link.entityUniqueId].artistName;
 
-  if (artist) {
-    artist_img = artist.artists[0].image;
-  }
+  const messageContentLink = link.linksByPlatform.youtube ? link.linksByPlatform.youtube.url : link.pageUrl;
 
-  const thumbnailUrl = await findBestThumbnail(link);
-
-  let embedColorHex = "DarkButNotBlack";
-  if (thumbnailUrl) {
-    try {
-      const palette = await Vibrant.from(thumbnailUrl).getPalette();
-      if (palette && palette.Vibrant) {
-        embedColorHex = palette.Vibrant.hex;
-      }
-    } catch (error) {
-      console.error("Failed to get color palette:", error);
-    }
-  }
-
-  const embedmessage = new EmbedBuilder()
-    .setDescription(
-      `**${linkType[link.type]}:** ${
-        link.title
-      }\n **Artist:** ${link.artist.join(", ")}`
-    )
-    .setAuthor({
-      name: `${link.title} - ${link.artist.join(", ")}`,
-      url: link.pageUrl,
-      iconURL: artist_img,
-    })
-    .setImage(thumbnailUrl)
-    .setFooter({
-      text: `Shared by ${message.author.username}`,
-      iconURL: message.author.displayAvatarURL(),
-    })
-    .setColor(embedColorHex);
+  const messageContent = `[${song_title} - ${song_artist}](${messageContentLink})`
 
   let buttons = [];
   Object.values(link.linksByPlatform).forEach((platform, i) => {
@@ -197,10 +102,13 @@ export async function sendLink(message, link, artist) {
     return row;
   });
 
+  // dismiss message link embed
+  message.suppressEmbeds(true);
+
   // If there is more than one group of buttons, we need to send the rest in a second message
   if (components.length > 1) {
     await message.reply({
-      embeds: [embedmessage],
+      content: messageContent,
       allowedMentions: { repliedUser: false },
       failIfNotExists: true,
       components: [components[0]],
@@ -212,7 +120,7 @@ export async function sendLink(message, link, artist) {
     }
   } else {
     await message.reply({
-      embeds: [embedmessage],
+      content: messageContent,
       allowedMentions: { repliedUser: false },
       failIfNotExists: true,
       components: components,
