@@ -67,7 +67,7 @@ client.on("messageCreate", async (message) => {
   if ((await getOptedOut(message.author.id)).length > 0) return;
 
   const urls = message.content.match(
-    /(https?:\/\/(music\.apple\.com|open\.spotify\.com|spotify\.link|music\.amazon\.com|tidal\.com|music\.youtube\.com|deezer\.com|music\.yandex\.ru|pandora\.com)\/[^\s]+)/g
+    /(https?:\/\/(music\.apple\.com|open\.spotify\.com|spotify\.link|music\.amazon\.com|tidal\.com|youtube\.com|youtu\.be|music\.youtube\.com|deezer\.com|music\.yandex\.ru|pandora\.com)\/[^\s]+)/g
   );
 
   if (urls) {
